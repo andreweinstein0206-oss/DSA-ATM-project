@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <cctype>
 
-
 #ifdef _WIN32
 #define CLEAR "cls"
 #include <windows.h>
@@ -26,109 +25,126 @@ const int PIN_SHIFT = 3;
 const string CSV_FILENAME = "accountinfo.csv";
 const string HISTORY_FILENAME = "history.csv";
 
-
 // ================================================================ HELPERS OF PROGRAM LAYOUT =======================================================================================
 
-void printCentered(const string& text) {
+void printCentered(const string &text)
+{
     int width = 120;
     int len = static_cast<int>(text.length());
     int spaces = (width - len) / 2;
 
-    if (spaces > 0) {
+    if (spaces > 0)
+    {
         cout << string(spaces, ' ');
     }
     cout << text << "\n";
 }
 
-void printCenteredNoNewline(const string& text) {
+void printCenteredNoNewline(const string &text)
+{
     int width = 104;
     int spaces = (width - static_cast<int>(text.length())) / 2;
-    if (spaces > 0) cout << string(spaces, ' ');
+    if (spaces > 0)
+        cout << string(spaces, ' ');
     cout << text;
 }
 
-void verticalCenter(int lines) {
-    for (int i = 0; i < lines; i++) {
+void verticalCenter(int lines)
+{
+    for (int i = 0; i < lines; i++)
+    {
         cout << "\n";
     }
 }
 
-void clearScreen() {
+void clearScreen()
+{
     system(CLEAR);
 }
 
-
 // ================================================================ STUCTURES =======================================================================================
 
-
-struct Transaction {
-    string type;          //withdraw, deposit, tranfer
+struct Transaction
+{
+    string type; // withdraw, deposit, tranfer
     float amount;
     float balanceAfter;
-    Transaction* next;
+    Transaction *next;
 };
 
-//One ATM account 
-struct Userinfo {
-    string accNum;           
+// One ATM account
+struct Userinfo
+{
+    string accNum;
     string name;
-    string birthday;            
+    string birthday;
     string contactNo;
-    string pinCode;             
+    string pinCode;
     float balance;
-    Transaction* historyHead;   
-    bool active;                 
+    Transaction *historyHead;
+    bool active;
 
     Userinfo() : balance(0), historyHead(nullptr), active(false) {}
 };
 
-
-class UserAccountList {
+class UserAccountList
+{
 private:
-
     Userinfo users[MAX_USERS];
     int userCount;
 
 public:
     UserAccountList() : userCount(0) {}
 
-    ~UserAccountList() {
-        for (int i = 0; i < MAX_USERS; i++) {
-            Transaction* current = users[i].historyHead;
-            while (current != nullptr) {
-                Transaction* toDelete = current;
+    ~UserAccountList()
+    {
+        for (int i = 0; i < MAX_USERS; i++)
+        {
+            Transaction *current = users[i].historyHead;
+            while (current != nullptr)
+            {
+                Transaction *toDelete = current;
                 current = current->next;
                 delete toDelete;
             }
         }
     }
 
-    int searchByAccNum(const string& accNum) const {
+    int searchByAccNum(const string &accNum) const
+    {
 
-        for (int i = 0; i < userCount; i++) {
-            if (users[i].active && users[i].accNum == accNum) {
+        for (int i = 0; i < userCount; i++)
+        {
+            if (users[i].active && users[i].accNum == accNum)
+            {
                 return i;
             }
         }
         return -1;
     }
 
-    int searchByContact(const string& contactNo) const {
-        for (int i = 0; i < userCount; i++) {
-            if (users[i].active && users[i].contactNo == contactNo) {
+    int searchByContact(const string &contactNo) const
+    {
+        for (int i = 0; i < userCount; i++)
+        {
+            if (users[i].active && users[i].contactNo == contactNo)
+            {
                 return i;
             }
         }
         return -1;
     }
 
-    bool accountNumberExists(const string& accNum) const {
+    bool accountNumberExists(const string &accNum) const
+    {
         return searchByAccNum(accNum) != -1;
     }
 
-    bool insertUser(const Userinfo& newUser) {
-        if (userCount >= MAX_USERS) {
-            return false;  // array is full
+    bool insertUser(const Userinfo &newUser)
+    {
+        if (userCount >= MAX_USERS)
+        {
+            return false; // array is full
         }
         users[userCount] = newUser;
         users[userCount].active = true;
@@ -136,25 +152,31 @@ public:
         return true;
     }
 
-    bool updateBalance(const string& accNum, float newBalance) {
+    bool updateBalance(const string &accNum, float newBalance)
+    {
         int idx = searchByAccNum(accNum);
-        if (idx == -1) return false;
+        if (idx == -1)
+            return false;
         users[idx].balance = newBalance;
         return true;
     }
 
-    bool updatePin(const string& accNum, const string& newEncryptedPin) {
+    bool updatePin(const string &accNum, const string &newEncryptedPin)
+    {
         int idx = searchByAccNum(accNum);
-        if (idx == -1) return false;
+        if (idx == -1)
+            return false;
         users[idx].pinCode = newEncryptedPin;
         return true;
     }
 
-    void addTransaction(const string& accNum, const string& type, float amount) {
+    void addTransaction(const string &accNum, const string &type, float amount)
+    {
         int idx = searchByAccNum(accNum);
-        if (idx == -1) return;
+        if (idx == -1)
+            return;
 
-        Transaction* newNode = new Transaction;
+        Transaction *newNode = new Transaction;
         newNode->type = type;
         newNode->amount = amount;
         newNode->balanceAfter = users[idx].balance;
@@ -162,19 +184,21 @@ public:
         users[idx].historyHead = newNode;
 
         ofstream histFile(HISTORY_FILENAME, ios::app);
-        if (histFile) {
+        if (histFile)
+        {
             histFile << accNum << "," << type << "," << amount << ","
                      << newNode->balanceAfter << "\n";
         }
     }
 
-
-    void restoreTransaction(const string& accNum, const string& type,
-                             float amount, float balanceAfter) {
+    void restoreTransaction(const string &accNum, const string &type,
+                            float amount, float balanceAfter)
+    {
         int idx = searchByAccNum(accNum);
-        if (idx == -1) return;
+        if (idx == -1)
+            return;
 
-        Transaction* newNode = new Transaction;
+        Transaction *newNode = new Transaction;
         newNode->type = type;
         newNode->amount = amount;
         newNode->balanceAfter = balanceAfter;
@@ -182,17 +206,20 @@ public:
         users[idx].historyHead = newNode;
     }
 
-    void printHistory(const string& accNum) const {
+    void printHistory(const string &accNum) const
+    {
         clearScreen();
         verticalCenter(5);
         int idx = searchByAccNum(accNum);
-        if (idx == -1) {
+        if (idx == -1)
+        {
             cout << "Account not found.\n";
             return;
         }
 
-        Transaction* current = users[idx].historyHead;
-        if (current == nullptr) {
+        Transaction *current = users[idx].historyHead;
+        if (current == nullptr)
+        {
             cout << "No transactions yet.\n";
             return;
         }
@@ -205,12 +232,13 @@ public:
 
         ostringstream header;
         header << "   " << left << setw(colType) << "TYPE"
-        << right << setw(colAmount) << "AMOUNT"
-        << setw(colBalance) << "BALANCE AFTER";
+               << right << setw(colAmount) << "AMOUNT"
+               << setw(colBalance) << "BALANCE AFTER";
         printCentered(header.str());
         printCentered(border);
 
-        while (current != nullptr) {
+        while (current != nullptr)
+        {
             ostringstream row;
             row << fixed << setprecision(2);
             row << "   " << left << setw(colType) << current->type
@@ -225,18 +253,19 @@ public:
     }
 
     int getUserCount() const { return userCount; }
-    Userinfo& getUserAt(int index) { return users[index]; }
-    const Userinfo& getUserAt(int index) const { return users[index]; }
+    Userinfo &getUserAt(int index) { return users[index]; }
+    const Userinfo &getUserAt(int index) const { return users[index]; }
 };
 
 // ================================================================ ENCRYPTING PIN CODE =======================================================================================
 
-
-
-string encryptPin(const string& plainPin) {
+string encryptPin(const string &plainPin)
+{
     string result = plainPin;
-    for (char& c : result) {
-        if (isdigit(static_cast<unsigned char>(c))) {
+    for (char &c : result)
+    {
+        if (isdigit(static_cast<unsigned char>(c)))
+        {
             int d = (c - '0' + PIN_SHIFT) % 10;
             c = static_cast<char>('0' + d);
         }
@@ -246,22 +275,25 @@ string encryptPin(const string& plainPin) {
 
 // ================================================================ INPUT HELPER =======================================================================================
 
-
-
-void clearInputBuffer() {
+void clearInputBuffer()
+{
     cin.clear();
     cin.ignore((numeric_limits<streamsize>::max)(), '\n');
 }
 
-void readLine(string& out) {
-    if (!getline(cin, out)) {
+void readLine(string &out)
+{
+    if (!getline(cin, out))
+    {
         cout << "\n[Input closed -- exiting.]\n";
         exit(0);
     }
 }
 
-void exitIfInputClosed() {
-    if (cin.eof()) {
+void exitIfInputClosed()
+{
+    if (cin.eof())
+    {
         cout << "\n[Input closed -- exiting.]\n";
         exit(0);
     }
@@ -269,45 +301,53 @@ void exitIfInputClosed() {
 
 // ================================================================ ATM USB AUTOMATION =======================================================================================
 
-
 string cardOverridePath = "";
 
-string findUSBDrive() {
-    if (!cardOverridePath.empty()) {
+string findUSBDrive()
+{
+    if (!cardOverridePath.empty())
+    {
         return cardOverridePath;
     }
 #ifdef _WIN32
 
     char drive[4] = "A:\\";
-    for (char letter = 'C'; letter <= 'Z'; letter++) {
+    for (char letter = 'C'; letter <= 'Z'; letter++)
+    {
         drive[0] = letter;
-        if (GetDriveTypeA(drive) == DRIVE_REMOVABLE) {
-        return string(1, letter) + ":\\";
+        if (GetDriveTypeA(drive) == DRIVE_REMOVABLE)
+        {
+            return string(1, letter) + ":\\";
         }
     }
     return "";
 #else
     struct stat info;
-    if (stat("./usb_card", &info) == 0 && (info.st_mode & S_IFDIR)) {
-    return "./usb_card/";
+    if (stat("./usb_card", &info) == 0 && (info.st_mode & S_IFDIR))
+    {
+        return "./usb_card/";
     }
     return "";
 #endif
 }
 
-bool isCardInserted() {
+bool isCardInserted()
+{
     return !findUSBDrive().empty();
 }
 
-void waitForCardRemoval() {
-    if (!cardOverridePath.empty()) {
+void waitForCardRemoval()
+{
+    if (!cardOverridePath.empty())
+    {
         cout << "\n";
         printCentered("Tester Press ENTER to continue...");
         string dummy;
         readLine(dummy);
         return;
     }
-    while (isCardInserted()) {
+    while (isCardInserted())
+    {
         cout << "\n";
         printCentered("Please remove your card, then press ENTER...");
         string dummy;
@@ -315,43 +355,50 @@ void waitForCardRemoval() {
     }
 }
 
-bool cardFileExists() {
+bool cardFileExists()
+{
     string path = findUSBDrive() + "card.dat";
     ifstream file(path);
     return file.good();
 }
 
-bool writeCardFile(const string& accNum, const string& encryptedPin) {
+bool writeCardFile(const string &accNum, const string &encryptedPin)
+{
     string path = findUSBDrive() + "card.dat";
     ofstream file(path);
-    if (!file) return false;
-    file << accNum << "\n" << encryptedPin << "\n";
-    return true;  // the ofstream destructor flushes and closes the file
+    if (!file)
+        return false;
+    file << accNum << "\n"
+         << encryptedPin << "\n";
+    return true; // the ofstream destructor flushes and closes the file
 }
 
-bool readCardFile(string& accNum, string& encryptedPin) {
+bool readCardFile(string &accNum, string &encryptedPin)
+{
     string path = findUSBDrive() + "card.dat";
     ifstream file(path);
-    if (!file) return false;
+    if (!file)
+        return false;
     getline(file, accNum);
     getline(file, encryptedPin);
     return true;
 }
 
-
 // ================================================================ CSV FILE HANDLING =======================================================================================
 
-
-
-bool loadFromCSV(UserAccountList& accounts, const string& filename = CSV_FILENAME) {
+bool loadFromCSV(UserAccountList &accounts, const string &filename = CSV_FILENAME)
+{
     ifstream file(filename);
-    if (!file) {
-        return false;  
+    if (!file)
+    {
+        return false;
     }
 
     string line;
-    while (getline(file, line)) {
-        if (line.empty()) continue;
+    while (getline(file, line))
+    {
+        if (line.empty())
+            continue;
 
         stringstream ss(line);
         string name, birthday, contactNo, accNum, pinCode, balanceStr;
@@ -368,40 +415,47 @@ bool loadFromCSV(UserAccountList& accounts, const string& filename = CSV_FILENAM
         u.birthday = birthday;
         u.contactNo = contactNo;
         u.accNum = accNum;
-        u.pinCode = pinCode;        
+        u.pinCode = pinCode;
         u.balance = stof(balanceStr);
         accounts.insertUser(u);
-
     }
     return true;
 }
 
-bool saveToCSV(const UserAccountList& accounts, const string& filename = CSV_FILENAME) {
+bool saveToCSV(const UserAccountList &accounts, const string &filename = CSV_FILENAME)
+{
     ofstream file(filename);
-    if (!file) return false;
+    if (!file)
+        return false;
 
-    for (int i = 0; i < accounts.getUserCount(); i++) {
-        const Userinfo& u = accounts.getUserAt(i);
-        if (!u.active) continue;
+    for (int i = 0; i < accounts.getUserCount(); i++)
+    {
+        const Userinfo &u = accounts.getUserAt(i);
+        if (!u.active)
+            continue;
         file << u.name << ","
-        << u.birthday << ","
-        << u.contactNo << ","
-        << u.accNum << ","
-        << u.pinCode << ","
-        << u.balance << "\n";
+             << u.birthday << ","
+             << u.contactNo << ","
+             << u.accNum << ","
+             << u.pinCode << ","
+             << u.balance << "\n";
     }
     return true;
 }
 
-bool loadHistoryFromCSV(UserAccountList& accounts, const string& filename = HISTORY_FILENAME) {
+bool loadHistoryFromCSV(UserAccountList &accounts, const string &filename = HISTORY_FILENAME)
+{
     ifstream file(filename);
-    if (!file) {
-        return false;  
+    if (!file)
+    {
+        return false;
     }
 
     string line;
-    while (getline(file, line)) {
-        if (line.empty()) continue;
+    while (getline(file, line))
+    {
+        if (line.empty())
+            continue;
 
         stringstream ss(line);
         string accNum, type, amountStr, balanceStr;
@@ -416,11 +470,10 @@ bool loadHistoryFromCSV(UserAccountList& accounts, const string& filename = HIST
     return true;
 }
 
-
 // ================================================================ REGISTRATION MODULE =======================================================================================
 
-
-bool runRegistration(UserAccountList& accounts, bool issueCard = true) {
+bool runRegistration(UserAccountList &accounts, bool issueCard = true)
+{
     clearScreen();
     verticalCenter(5);
     Userinfo newUser;
@@ -429,40 +482,46 @@ bool runRegistration(UserAccountList& accounts, bool issueCard = true) {
     cout << "\n";
     printCenteredNoNewline("Enter Name: ");
     readLine(newUser.name);
-cout << "\n";
+    cout << "\n";
     printCenteredNoNewline("Enter Birthday (YYYY-MM-DD): ");
     readLine(newUser.birthday);
 
     // ---- Contact number: must not already belong to another account ----
-    while (true) {
+    while (true)
+    {
         cout << "\n";
         printCenteredNoNewline("Enter Contact Number: ");
         readLine(newUser.contactNo);
-        if (accounts.searchByContact(newUser.contactNo) == -1) {
+        if (accounts.searchByContact(newUser.contactNo) == -1)
+        {
             break;
         }
         printCentered("Contact no. Exist, please try again.");
     }
 
-    //5-digit account number, checked for collisions 
-    while (true) {
+    // 5-digit account number, checked for collisions
+    while (true)
+    {
         printCenteredNoNewline("Add 5-digit Account Number: ");
         readLine(newUser.accNum);
-        if (newUser.accNum.length() != 5) {
+        if (newUser.accNum.length() != 5)
+        {
             cout << "\n";
             printCentered("Account number must be exactly 5 digits.");
             continue;
         }
-        if (!accounts.accountNumberExists(newUser.accNum)) {
+        if (!accounts.accountNumberExists(newUser.accNum))
+        {
             break;
         }
         printCentered("Acc no. Exist, please try again.");
     }
 
-    // PIN entry + confirmation, up to 3 attempts 
+    // PIN entry + confirmation, up to 3 attempts
     string pin, confirmPin;
     bool pinConfirmed = false;
-    for (int attempt = 1; attempt <= 3; attempt++) {
+    for (int attempt = 1; attempt <= 3; attempt++)
+    {
         cout << "\n";
         printCenteredNoNewline("Input 4-6 digit PIN Code: ");
         readLine(pin);
@@ -470,36 +529,41 @@ cout << "\n";
         printCenteredNoNewline("Confirm PIN Code: ");
         readLine(confirmPin);
 
-        if (pin == confirmPin && pin.length() >= 4 && pin.length() <= 6) {
+        if (pin == confirmPin && pin.length() >= 4 && pin.length() <= 6)
+        {
             pinConfirmed = true;
             break;
         }
         printCentered(to_string(attempt) + " attempt failed.");
     }
 
-    if (!pinConfirmed) {
+    if (!pinConfirmed)
+    {
         cout << "\n";
         printCentered("Registration cancelled. Returning to main menu.");
         this_thread::sleep_for(chrono::seconds(2));
         return false;
     }
-    newUser.pinCode = encryptPin(pin);  
+    newUser.pinCode = encryptPin(pin);
 
     // >= 5000 DEPOSIT
     float deposit;
-    while (true) {
+    while (true)
+    {
         cout << "\n";
         printCenteredNoNewline("Enter deposit (initial is 5000): ");
         cin >> deposit;
         exitIfInputClosed();
-        if (cin.fail()) {
+        if (cin.fail())
+        {
             clearInputBuffer();
             cout << "\n";
             printCentered("Invalid amount, must be 5000 and above.");
             continue;
         }
         clearInputBuffer();
-        if (deposit >= 5000) {
+        if (deposit >= 5000)
+        {
             break;
         }
         cout << "\n";
@@ -508,7 +572,7 @@ cout << "\n";
     newUser.balance = deposit;
 
     clearScreen();
-    verticalCenter(3); 
+    verticalCenter(3);
     accounts.insertUser(newUser);
     saveToCSV(accounts);
     bool cardWritten = issueCard ? writeCardFile(newUser.accNum, newUser.pinCode) : true;
@@ -530,13 +594,15 @@ cout << "\n";
     balanceText << fixed << setprecision(2) << newUser.balance;
     printCentered("Current Balance: " + balanceText.str());
     cout << "\n\n";
-    if (!issueCard) {
+    if (!issueCard)
+    {
         printCentered("=========================================================");
-    cout << "\n\n";
+        cout << "\n\n";
         printCentered("(No card issued. This account can receive transfers.)");
     }
 
-    if (!cardWritten) {
+    if (!cardWritten)
+    {
         cout << "\n";
         printCentered("WARNING: could not write card.dat to the USB drive.");
         printCentered("Your account was saved, but you'll need to reinsert the");
@@ -551,46 +617,55 @@ cout << "\n";
 
 // ================================================================ TRANSACTION MODULE =======================================================================================
 
-
-
 #ifdef _WIN32
-void closeConsoleWindow() {
+void closeConsoleWindow()
+{
     HWND console = GetConsoleWindow();
-    if (console != NULL) {
+    if (console != NULL)
+    {
         PostMessage(console, WM_CLOSE, 0, 0);
     }
 }
 #endif
 
 #ifdef _WIN32
-void closeParentShell() {
+void closeParentShell()
+{
     DWORD myPid = GetCurrentProcessId();
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (snap == INVALID_HANDLE_VALUE) return;
+    if (snap == INVALID_HANDLE_VALUE)
+        return;
 
     PROCESSENTRY32W pe;
     pe.dwSize = sizeof(pe);
 
     DWORD parentPid = 0;
-    if (Process32FirstW(snap, &pe)) {
-        do {
-            if (pe.th32ProcessID == myPid) {
+    if (Process32FirstW(snap, &pe))
+    {
+        do
+        {
+            if (pe.th32ProcessID == myPid)
+            {
                 parentPid = pe.th32ParentProcessID;
                 break;
             }
         } while (Process32NextW(snap, &pe));
     }
 
-
-    if (parentPid != 0 && Process32FirstW(snap, &pe)) {
-        do {
-            if (pe.th32ProcessID == parentPid) {
+    if (parentPid != 0 && Process32FirstW(snap, &pe))
+    {
+        do
+        {
+            if (pe.th32ProcessID == parentPid)
+            {
                 bool isShell = _wcsicmp(pe.szExeFile, L"cmd.exe") == 0 ||
-                        _wcsicmp(pe.szExeFile, L"powershell.exe") == 0 ||
-                        _wcsicmp(pe.szExeFile, L"pwsh.exe") == 0;
-                        if (isShell) {
-                        HANDLE h = OpenProcess(PROCESS_TERMINATE, FALSE, parentPid);
-                        if (h != NULL) {
+                               _wcsicmp(pe.szExeFile, L"powershell.exe") == 0 ||
+                               _wcsicmp(pe.szExeFile, L"pwsh.exe") == 0;
+                if (isShell)
+                {
+                    HANDLE h = OpenProcess(PROCESS_TERMINATE, FALSE, parentPid);
+                    if (h != NULL)
+                    {
                         TerminateProcess(h, 0);
                         CloseHandle(h);
                     }
@@ -603,25 +678,27 @@ void closeParentShell() {
 }
 #endif
 
-void closeProgram() {
+void closeProgram()
+{
     this_thread::sleep_for(chrono::seconds(3));
 #ifdef _WIN32
-    closeParentShell();     
-    closeConsoleWindow();  
+    closeParentShell();
+    closeConsoleWindow();
 #endif
     exit(0);
 }
 
-void closingMessage() {
-    cout << "\n\n";   
+void closingMessage()
+{
+    cout << "\n\n";
     printCentered("Thankyou for transacting with A&B CAPTAL!");
-    cout << "\n";   
+    cout << "\n";
     printCentered("Automatically closing the program in 3 seconds...");
     closeProgram();
 }
 
-
-bool askAnotherTransaction() {
+bool askAnotherTransaction()
+{
     cout << "\n\n\n";
     printCentered("1. Do another transaction");
     printCentered("2. Exit and eject card");
@@ -634,51 +711,59 @@ bool askAnotherTransaction() {
     return choice == 1;
 }
 
-void showBalance(UserAccountList& accounts, const string& accNum) {
+void showBalance(UserAccountList &accounts, const string &accNum)
+{
     clearScreen();
     verticalCenter(5);
     int idx = accounts.searchByAccNum(accNum);
     ostringstream text;
     text << fixed << setprecision(2)
-         << "===== Available balance: " << accounts.getUserAt(idx).balance ;
+         << "===== Available balance: " << accounts.getUserAt(idx).balance;
 
     cout << "\n";
     printCentered(text.str());
 }
 
 // BALANCE INQUIRY
-void doBalanceInquiry(UserAccountList& accounts, const string& accNum) {
-            clearScreen();
-            verticalCenter(3);
+void doBalanceInquiry(UserAccountList &accounts, const string &accNum)
+{
+    clearScreen();
+    verticalCenter(3);
     printCentered("========== BALANCE INQUIRY ==========");
-        cout << "\n\n\n\n\n";
+    cout << "\n\n\n\n\n";
     printCentered("1. Show available balance");
     printCentered("2. Show transaction history");
-        cout << "\n\n\n\n\n";
+    cout << "\n\n\n\n\n";
     printCenteredNoNewline("Enter choice: ");
     int choice;
     cin >> choice;
     exitIfInputClosed();
     clearInputBuffer();
-    if (choice == 1) {
+    if (choice == 1)
+    {
         showBalance(accounts, accNum);
-    } else {
+    }
+    else
+    {
         accounts.printHistory(accNum);
     }
 }
 
 // WITHDRAW
-void doWithdraw(UserAccountList& accounts, const string& accNum) {
+void doWithdraw(UserAccountList &accounts, const string &accNum)
+{
     clearScreen();
-            verticalCenter(3);
-    while (true) {
+    verticalCenter(3);
+    while (true)
+    {
         printCentered("========== WITHDRAW ==========");
         cout << "\n\n\n";
         printCenteredNoNewline(" Enter amount to withdraw: ");
         float amount;
         cin >> amount;
         exitIfInputClosed();
-        if (cin.fail() || amount <= 0) {
+        if (cin.fail() || amount <= 0)
+        {
             clearInputBuffer();
             cout << "\"INVALID AMOUNT, PLEASE TRY AGAIN\"\n";
             continue;
@@ -688,8 +773,8 @@ void doWithdraw(UserAccountList& accounts, const string& accNum) {
         int idx = accounts.searchByAccNum(accNum);
         float balance = accounts.getUserAt(idx).balance;
 
-        
-        if (amount <= balance) {
+        if (amount <= balance)
+        {
             accounts.updateBalance(accNum, balance - amount);
             accounts.addTransaction(accNum, "Withdraw", amount);
             saveToCSV(accounts);
@@ -712,16 +797,20 @@ void doWithdraw(UserAccountList& accounts, const string& accNum) {
         cin >> choice;
         exitIfInputClosed();
         clearInputBuffer();
-        if (choice == 1) continue;   
-        if (choice == 2) return;    
+        if (choice == 1)
+            continue;
+        if (choice == 2)
+            return;
         closingMessage();
-        exit(0);                     
+        exit(0);
     }
 }
 
 // DEPOSIT
-void doDeposit(UserAccountList& accounts, const string& accNum) {
-    while (true) {
+void doDeposit(UserAccountList &accounts, const string &accNum)
+{
+    while (true)
+    {
         clearScreen();
         verticalCenter(5);
         printCentered("========== DEPOSIT ==========");
@@ -730,7 +819,8 @@ void doDeposit(UserAccountList& accounts, const string& accNum) {
         float amount;
         cin >> amount;
         exitIfInputClosed();
-        if (cin.fail() || amount <= 0) {
+        if (cin.fail() || amount <= 0)
+        {
             clearInputBuffer();
             printCentered("INVALID AMOUNT, PLEASE TRY AGAIN");
             continue;
@@ -749,10 +839,12 @@ void doDeposit(UserAccountList& accounts, const string& accNum) {
 }
 
 // TRANSFER
-void doTransfer(UserAccountList& accounts, const string& accNum) {
+void doTransfer(UserAccountList &accounts, const string &accNum)
+{
     clearScreen();
     verticalCenter(5);
-    while (true) {
+    while (true)
+    {
         printCentered(" =============== TRANSFER ===============");
         cout << "\n\n\n";
         printCentered("(Type 0 to cancel transaction....)");
@@ -761,39 +853,46 @@ void doTransfer(UserAccountList& accounts, const string& accNum) {
         string destAcc;
         readLine(destAcc);
 
-        if (destAcc == "0") {
+        if (destAcc == "0")
+        {
             cout << "\n\n\n";
             printCentered("Transfer cancelled.");
-            return;  // back to Transaction Module menu
+            return; // back to Transaction Module menu
         }
 
-        if (destAcc == accNum) {
+        if (destAcc == accNum)
+        {
             cout << "\n\n\n";
             printCentered("You cannot transfer to your own account.");
             continue;
         }
-        if (accounts.searchByAccNum(destAcc) == -1) {
+        if (accounts.searchByAccNum(destAcc) == -1)
+        {
             cout << "\"Account is not exist, please try again.\"\n";
-            continue;  // loop back to "Enter Destination Acc no."
+            continue; // loop back to "Enter Destination Acc no."
         }
 
-        while (true) {
+        while (true)
+        {
             printCentered("(Type 0 to cancel)");
             printCenteredNoNewline("Enter Amount: ");
             float amount;
             cin >> amount;
             exitIfInputClosed();
-            if (cin.fail()) {
+            if (cin.fail())
+            {
                 clearInputBuffer();
                 cout << "\"INVALID AMOUNT, PLEASE TRY AGAIN\"\n";
                 continue;
             }
             clearInputBuffer();
-            if (amount == 0) {
+            if (amount == 0)
+            {
                 cout << "Transfer cancelled.\n";
-                return;  
+                return;
             }
-            if (amount < 0) {
+            if (amount < 0)
+            {
                 cout << "\"INVALID AMOUNT, PLEASE TRY AGAIN\"\n";
                 continue;
             }
@@ -802,7 +901,8 @@ void doTransfer(UserAccountList& accounts, const string& accNum) {
             float srcBalance = accounts.getUserAt(srcIdx).balance;
 
             // Transfer amount <= balance -> proceed
-            if (amount <= srcBalance) {
+            if (amount <= srcBalance)
+            {
                 int destIdx = accounts.searchByAccNum(destAcc);
                 float destBalance = accounts.getUserAt(destIdx).balance;
                 accounts.updateBalance(accNum, srcBalance - amount);
@@ -817,28 +917,32 @@ void doTransfer(UserAccountList& accounts, const string& accNum) {
 
             // Transfer amount > balance -> insufficient funds
             cout << "\"Your currently balance is too low for your desired "
-            << "amount, please try again\"\n";
+                 << "amount, please try again\"\n";
             showBalance(accounts, accNum);
             cout << "1. Try again\n2. Back to Main Menu\n3. Eject card\n> ";
             int choice;
             cin >> choice;
             exitIfInputClosed();
             clearInputBuffer();
-            if (choice == 1) continue;   // loop back to "Enter Amount"
-            if (choice == 2) return;     // back to Transaction Module menu
+            if (choice == 1)
+                continue; // loop back to "Enter Amount"
+            if (choice == 2)
+                return; // back to Transaction Module menu
             closingMessage();
             exit(0);
-        } 
-    }      
-}         
+        }
+    }
+}
 
 // CHANGE PIN
-void doChangePin(UserAccountList& accounts, const string& accNum) {
+void doChangePin(UserAccountList &accounts, const string &accNum)
+{
     clearScreen();
     verticalCenter(5);
 
     bool currentPinOk = false;
-    for (int attempt = 1; attempt <= 3; attempt++) {
+    for (int attempt = 1; attempt <= 3; attempt++)
+    {
         printCentered(" ========== CHANGE PIN ========== ");
         cout << "\n\n\n";
         printCenteredNoNewline("Enter Current PIN: ");
@@ -846,16 +950,18 @@ void doChangePin(UserAccountList& accounts, const string& accNum) {
         readLine(entered);
 
         int idx = accounts.searchByAccNum(accNum);
-        if (encryptPin(entered) == accounts.getUserAt(idx).pinCode) {
+        if (encryptPin(entered) == accounts.getUserAt(idx).pinCode)
+        {
             currentPinOk = true;
             break;
         }
         cout << "INCORRECT PIN\n";
     }
-    if (!currentPinOk) {
+    if (!currentPinOk)
+    {
         cout << "\n\n";
         printCentered("3 Attempt failed, PLEASE TRY AGAIN");
-        return;  
+        return;
     }
 
     string newPin, confirmPin;
@@ -866,7 +972,8 @@ void doChangePin(UserAccountList& accounts, const string& accNum) {
     printCenteredNoNewline("CONFIRM PIN: ");
     readLine(confirmPin);
 
-    if (newPin != confirmPin) {
+    if (newPin != confirmPin)
+    {
         cout << "\n\n\n";
         printCentered("Your two new PIN entries didn't match.");
         return;
@@ -874,48 +981,60 @@ void doChangePin(UserAccountList& accounts, const string& accNum) {
     string encryptedNew = encryptPin(newPin);
     accounts.updatePin(accNum, encryptedNew);
     saveToCSV(accounts);
-    writeCardFile(accNum, encryptedNew);  
+    writeCardFile(accNum, encryptedNew);
     cout << "\n";
     printCentered("PIN CHANGED SUCCESSFULLY! Thankyou for using!");
 }
 
-//  Main Transaction Module 
-void runTransactionModule(UserAccountList& accounts, const string& accNum) {
-    while (true) {
+//  Main Transaction Module
+void runTransactionModule(UserAccountList &accounts, const string &accNum)
+{
+    while (true)
+    {
         clearScreen();
         verticalCenter(5);
         printCentered("======== TRANSACTION MODULE ========");
-        printCentered( "\n");
-        printCentered("1. Balance Inquiry"); 
+        printCentered("\n");
+        printCentered("1. Balance Inquiry");
         printCentered("2. Withdraw");
         printCentered("3. Deposit");
         printCentered("4. Transfer");
         printCentered("5. Change PIN");
         printCentered("6. Exit and eject card");
-        printCentered( "\n");
+        printCentered("\n");
         printCenteredNoNewline("Enter choice: ");
-
-
 
         int choice;
         cin >> choice;
         exitIfInputClosed();
         clearInputBuffer();
-        switch (choice) {
-            case 1: doBalanceInquiry(accounts, accNum); break;
-            case 2: doWithdraw(accounts, accNum); break;
-            case 3: doDeposit(accounts, accNum); break;
-            case 4: doTransfer(accounts, accNum); break;
-            case 5: doChangePin(accounts, accNum); break;
-            case 6:
-                closingMessage();
-                return;
-            default:
-                cout << "Invalid option.\n";
-                this_thread::sleep_for(chrono::seconds(1));
-                continue;
+        switch (choice)
+        {
+        case 1:
+            doBalanceInquiry(accounts, accNum);
+            break;
+        case 2:
+            doWithdraw(accounts, accNum);
+            break;
+        case 3:
+            doDeposit(accounts, accNum);
+            break;
+        case 4:
+            doTransfer(accounts, accNum);
+            break;
+        case 5:
+            doChangePin(accounts, accNum);
+            break;
+        case 6:
+            closingMessage();
+            return;
+        default:
+            cout << "Invalid option.\n";
+            this_thread::sleep_for(chrono::seconds(1));
+            continue;
         }
-        if (!askAnotherTransaction()) {
+        if (!askAnotherTransaction())
+        {
             closingMessage();
             return;
         }
@@ -924,10 +1043,10 @@ void runTransactionModule(UserAccountList& accounts, const string& accNum) {
 
 // ================================================================ MAIN PROGRAM =======================================================================================
 
-
-
-int main(int argc, char* argv[]) {
-    if (argc > 1) {
+int main(int argc, char *argv[])
+{
+    if (argc > 1)
+    {
         cardOverridePath = "./usb_card_" + string(argv[1]) + "/";
 #ifdef _WIN32
         CreateDirectoryA(cardOverridePath.c_str(), NULL);
@@ -941,11 +1060,11 @@ int main(int argc, char* argv[]) {
     loadFromCSV(accounts);
     loadHistoryFromCSV(accounts);
 
-
-
-    while (true) {
+    while (true)
+    {
         // ---------------- "Please insert your card...." ----------------
-        while (!isCardInserted()) {
+        while (!isCardInserted())
+        {
             clearScreen();
             verticalCenter(5);
             printCentered("=============== WELCOME TO A&B CAPITAL BANK ===============");
@@ -954,19 +1073,20 @@ int main(int argc, char* argv[]) {
             cout << "\n\n\n";
             printCentered("(Press ENTER once the flash drive is plugged in)");
             printCentered("(type 3 to exit)");
-            printCentered( "\n");
+            printCentered("\n");
             cout << string(58, ' ');
             string input;
-            readLine (input);
-            if (input == "3") { 
+            readLine(input);
+            if (input == "3")
+            {
                 printCentered("Thankyou for using A&B CAPITAL! exitt program in 3 seconds");
                 closeProgram();
             }
         }
 
-
         // ---- (1) UNREGISTERED CARD ----
-        if (!cardFileExists()) {
+        if (!cardFileExists())
+        {
             clearScreen();
             verticalCenter(3);
             printCentered("========== (1) UNREGISTERED CARD ==========");
@@ -975,16 +1095,13 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
-
-
         // ---- (2) REGISTERED CARD ----
         string cardAccNum, cardEncPin;
         readCardFile(cardAccNum, cardEncPin);
 
-
-
         int idx = accounts.searchByAccNum(cardAccNum);
-        if (idx == -1 || accounts.getUserAt(idx).pinCode != cardEncPin) {
+        if (idx == -1 || accounts.getUserAt(idx).pinCode != cardEncPin)
+        {
             clearScreen();
             verticalCenter(5);
             printCentered("\"PIN NOT LOCATED\"");
@@ -992,11 +1109,10 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
-
-
         // ---- Card menu: login, or register another account ----
         bool wantsLogin = false;
-        while (true) {
+        while (true)
+        {
             clearScreen();
             verticalCenter(5);
             printCentered("========== (2) REGISTERED CARD ==========");
@@ -1009,11 +1125,21 @@ int main(int argc, char* argv[]) {
             string menuChoice;
             readLine(menuChoice);
 
-            if (menuChoice == "1") { wantsLogin = true; break; }
-            if (menuChoice == "2") { runRegistration(accounts, false); continue; }
-            if (menuChoice == "3") break;
+            if (menuChoice == "1")
+            {
+                wantsLogin = true;
+                break;
+            }
+            if (menuChoice == "2")
+            {
+                runRegistration(accounts, false);
+                continue;
+            }
+            if (menuChoice == "3")
+                break;
         }
-        if (!wantsLogin) {
+        if (!wantsLogin)
+        {
             waitForCardRemoval();
             continue;
         }
@@ -1024,12 +1150,14 @@ int main(int argc, char* argv[]) {
         cout << "\n";
 
         bool pinOk = false;
-        for (int attempt = 1; attempt <= 3; attempt++) {
+        for (int attempt = 1; attempt <= 3; attempt++)
+        {
             verticalCenter(3);
             printCenteredNoNewline("INPUT PIN: ");
             string entered;
             readLine(entered);
-            if (encryptPin(entered) == accounts.getUserAt(idx).pinCode) {
+            if (encryptPin(entered) == accounts.getUserAt(idx).pinCode)
+            {
                 pinOk = true;
                 break;
             }
@@ -1037,15 +1165,16 @@ int main(int argc, char* argv[]) {
             printCentered("********** INVALID PIN **********");
         }
 
-        if (!pinOk) {
+        if (!pinOk)
+        {
             printCentered("more than 3 attempts.\n");
             printCentered("Ejecting card, please try again for security purposes.\n");
             closeProgram();
-            return 0;  
+            return 0;
         }
 
         cout << "\"VALID PIN\"\n";
         runTransactionModule(accounts, cardAccNum);
-        return 0; 
-    }   
+        return 0;
+    }
 }
