@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -246,15 +245,14 @@ string findUSBDrive() {
     for (char letter = 'C'; letter <= 'Z'; letter++) {
         drive[0] = letter;
         if (GetDriveTypeA(drive) == DRIVE_REMOVABLE) {
-            return string(1, letter) + ":\\";
+        return string(1, letter) + ":\\";
         }
     }
     return "";
 #else
-.
     struct stat info;
     if (stat("./usb_card", &info) == 0 && (info.st_mode & S_IFDIR)) {
-        return "./usb_card/";
+    return "./usb_card/";
     }
     return "";
 #endif
@@ -358,56 +356,56 @@ bool runRegistration(UserAccountList& accounts) {
     verticalCenter(5);
     Userinfo newUser;
 
-    printCentered("\n=== REGISTRATION MODULE ===\n");
-    printCentered("\nEnter Name: ");
+    printCentered("=== REGISTRATION MODULE ===");
+    cout << "\n";
+    printCenteredNoNewline("Enter Name: ");
     readLine(newUser.name);
 
-    printCentered("Enter Birthday (YYYY-MM-DD): ");
+    printCenteredNoNewline("Enter Birthday (YYYY-MM-DD): ");
     readLine(newUser.birthday);
 
     // ---- Contact number: must not already belong to another account ----
     while (true) {
-        cout << "Enter Contact Number: ";
+        printCenteredNoNewline("Enter Contact Number: ");
         readLine(newUser.contactNo);
         if (accounts.searchByContact(newUser.contactNo) == -1) {
             break;
         }
-        printCentered("Contact no. Exist, please try again.\n");
-        return 0;
+        printCentered("Contact no. Exist, please try again.");
     }
 
     // ---- 5-digit account number, checked for collisions ----
     while (true) {
-        cout << "Add 5-digit Account Number: ";
+        printCenteredNoNewline("Add 5-digit Account Number: ");
         readLine(newUser.accNum);
         if (newUser.accNum.length() != 5) {
-            cout << "Account number must be exactly 5 digits.\n";
+            printCentered("Account number must be exactly 5 digits.");
             continue;
         }
         if (!accounts.accountNumberExists(newUser.accNum)) {
             break;
         }
-        cout << "Acc no. Exist, please try again.\n";
+        printCentered("Acc no. Exist, please try again.");
     }
 
     // ---- PIN entry + confirmation, up to 3 attempts ----
     string pin, confirmPin;
     bool pinConfirmed = false;
     for (int attempt = 1; attempt <= 3; attempt++) {
-        cout << "Input 4-6 digit PIN Code: ";
+        printCenteredNoNewline("Input 4-6 digit PIN Code: ");
         readLine(pin);
-        cout << "Confirm PIN Code: ";
+        printCenteredNoNewline("Confirm PIN Code: ");
         readLine(confirmPin);
 
         if (pin == confirmPin && pin.length() >= 4 && pin.length() <= 6) {
             pinConfirmed = true;
             break;
         }
-        cout << attempt << " attempt failed.\n";
+        printCentered(to_string(attempt) + " attempt failed.");
     }
 
     if (!pinConfirmed) {
-        cout << "Registration cancelled. Returning to main menu.\n";
+        printCentered("Registration cancelled. Returning to main menu.");
         return false;
     }
     newUser.pinCode = encryptPin(pin);  
@@ -415,19 +413,19 @@ bool runRegistration(UserAccountList& accounts) {
     // ---- Initial deposit: must be 5000 or more ----
     float deposit;
     while (true) {
-        cout << "Enter deposit (initial is 5000): ";
+        printCenteredNoNewline("Enter deposit (initial is 5000): ");
         cin >> deposit;
         exitIfInputClosed();
         if (cin.fail()) {
             clearInputBuffer();
-            cout << "Invalid amount, must be 5000 and above.\n";
+            printCentered("Invalid amount, must be 5000 and above.");
             continue;
         }
         clearInputBuffer();
         if (deposit >= 5000) {
             break;
         }
-        cout << "INVALID, must be 5000 and above. Enter to try again.\n";
+        printCentered("INVALID, must be 5000 and above. Enter to try again.");
     }
     newUser.balance = deposit;
 
@@ -436,25 +434,30 @@ bool runRegistration(UserAccountList& accounts) {
     saveToCSV(accounts);
     bool cardWritten = writeCardFile(newUser.accNum, newUser.pinCode);
 
-    cout << "\nSuccessfully added your initial deposit balance.\n\n";
-   
-    cout << "You are now successfully registered!\n\n\n";
-    
-    cout << "Name: " << newUser.name << "\n";
-    cout << "Birthdate: " << newUser.birthday << "\n";
-    cout << "Contact no.: " << newUser.contactNo << "\n";
-    cout << "Account Number: " << newUser.accNum << "\n";
-    cout << "Pin code: (hidden)\n";
-    cout << fixed << setprecision(2);
-    cout << "Current Balance: " << newUser.balance << "\n";
+    cout << "\n";
+    printCentered("Successfully added your initial deposit balance.");
+    cout << "\n";
+    printCentered("You are now successfully registered!");
+    cout << "\n\n";
+
+    printCentered("Name: " + newUser.name);
+    printCentered("Birthdate: " + newUser.birthday);
+    printCentered("Contact no.: " + newUser.contactNo);
+    printCentered("Account Number: " + newUser.accNum);
+    printCentered("Pin code: (hidden)");
+    ostringstream balanceText;
+    balanceText << fixed << setprecision(2) << newUser.balance;
+    printCentered("Current Balance: " + balanceText.str());
 
     if (!cardWritten) {
-        cout << "\nWARNING: could not write card.dat to the USB drive.\n"
-            << "Your account was saved, but you'll need to reinsert the\n"
-            << "drive before you can log in with it.\n";
+        cout << "\n";
+        printCentered("WARNING: could not write card.dat to the USB drive.");
+        printCentered("Your account was saved, but you'll need to reinsert the");
+        printCentered("drive before you can log in with it.");
     }
 
-    cout << "\nPress ENTER to go back to the main menu...";
+    cout << "\n";
+    printCenteredNoNewline("Press ENTER to go back to the main menu...");
     cin.get();
     return true;
 }
@@ -586,7 +589,7 @@ void doWithdraw(UserAccountList& accounts, const string& accNum) {
         }
 
         // entered amount > balance > insufficient funds
-        cout << "(DISPLAY ONLY) Your desired amount exceeds your balance.\n";
+        cout << "Your desired amount exceeds your balance...\n";
         showBalance(accounts, accNum);
         cout << "1. Try again\n2. Back to Main Menu\n3. Eject card\n> ";
         int choice;
@@ -674,10 +677,12 @@ void doTransfer(UserAccountList& accounts, const string& accNum) {
             cout << "\"Your currently balance is too low for your desired "
             << "amount, please try again\"\n";
             showBalance(accounts, accNum);
-    }
-}
+        } 
+    }      
+}         
 
 // CHANGE PIN
+
 void doChangePin(UserAccountList& accounts, const string& accNum) {
     bool currentPinOk = false;
     for (int attempt = 1; attempt <= 3; attempt++) {
@@ -716,9 +721,9 @@ void doChangePin(UserAccountList& accounts, const string& accNum) {
 
 //  Main Transaction Module 
 void runTransactionModule(UserAccountList& accounts, const string& accNum) {
-            clearScreen();
-            verticalCenter(5);
-            while (true) {
+    while (true) {
+        clearScreen();
+        verticalCenter(5);
         printCentered("======== TRANSACTION MODULE ========");
         printCentered( "\n");
         printCentered("1. Balance Inquiry"); 
@@ -728,7 +733,7 @@ void runTransactionModule(UserAccountList& accounts, const string& accNum) {
         printCentered("5. Change PIN");
         printCentered("6. Exit and eject card");
         printCentered( "\n");
-            printCenteredNoNewline("Enter choice: ");
+        printCenteredNoNewline("Enter choice: ");
 
         int choice;
         cin >> choice;
@@ -745,6 +750,7 @@ void runTransactionModule(UserAccountList& accounts, const string& accNum) {
                 return;
             default:
                 cout << "Invalid option.\n";
+                this_thread::sleep_for(chrono::seconds(1));
                 continue;
         }
 
@@ -782,7 +788,7 @@ int main() {
                 printCentered("Thankyou for using A&B CAPITAL! exitt program in 3 seconds");
                 closeProgram();
             }
-        } cout << "\natm inserted.\n=== MODULES ===\n";
+        }
 
 
         // ---- (1) UNREGISTERED CARD ----
@@ -837,7 +843,5 @@ int main() {
         cout << "\"VALID PIN\"\n";
         runTransactionModule(accounts, cardAccNum);
         return 0; 
-        // runTransactionModule only returns after "Exit and eject card",
-        // so we loop back to the very top and wait for the next customer.
-    }
-}
+    }   
+}      
