@@ -26,9 +26,8 @@ const int MAX_USERS = 100;
 const int PIN_SHIFT = 3;
 const string CSV_FILENAME = "accountinfo.csv";
 
-// ============================================================
+
 //  HELPERS
-// ============================================================
 
 void printCentered(const string& text) {
     int width = 120;
@@ -58,9 +57,9 @@ void clearScreen() {
     system(CLEAR);
 }
 
-// ============================================================
-// SECTION 1: DATA STRUCTURES
-// ============================================================
+
+// SECTION 1: STRUCTURES
+
 struct Transaction {
     string type;          //withdraw, deposit, tranfer
     float amount;
@@ -68,7 +67,7 @@ struct Transaction {
     Transaction* next;
 };
 
-// ---- One ATM account ----
+//One ATM account 
 struct Userinfo {
     string accNum;           
     string name;
@@ -104,8 +103,7 @@ public:
     }
 
     int searchByAccNum(const string& accNum) const {
-        // Linear search: with MAX_USERS = 100 this is fast enough, and
-        // it's the natural search strategy for an unsorted array.
+
         for (int i = 0; i < userCount; i++) {
             if (users[i].active && users[i].accNum == accNum) {
                 return i;
@@ -155,10 +153,6 @@ public:
         int idx = searchByAccNum(accNum);
         if (idx == -1) return;
 
-        // Insert at the HEAD of the list. This is the actual ADT LIST
-        // "insert" operation for this project -- and inserting at the
-        // head means printHistory() naturally shows the newest
-        // transaction first, with no extra sorting needed.
         Transaction* newNode = new Transaction;
         newNode->type = type;
         newNode->amount = amount;
@@ -174,8 +168,6 @@ public:
             return;
         }
 
-        // This is the ADT LIST "traverse" operation: walk every node
-        // from the head until we hit nullptr.
         Transaction* current = users[idx].historyHead;
         if (current == nullptr) {
             cout << "No transactions yet.\n";
@@ -197,9 +189,8 @@ public:
     const Userinfo& getUserAt(int index) const { return users[index]; }
 };
 
-// ============================================================
 // SECTION 2: PIN ENCRYPTION
-// ============================================================
+
 
 string encryptPin(const string& plainPin) {
     string result = plainPin;
@@ -223,9 +214,9 @@ string decryptPin(const string& encryptedPin) {
     return result;
 }
 
-// ============================================================
+
 // SECTION 3: SAFE INPUT HELPERS
-// ============================================================
+
 
 void clearInputBuffer() {
     cin.clear();
@@ -246,10 +237,7 @@ void exitIfInputClosed() {
     }
 }
 
-// ============================================================
 // SECTION 4: ATM CARD (USB FLASH DRIVE) SIMULATION
-// ============================================================
-
 
 string findUSBDrive() {
 #ifdef _WIN32
@@ -308,14 +296,14 @@ bool readCardFile(string& accNum, string& encryptedPin) {
     return true;
 }
 
-// ============================================================
+
 // SECTION 5: CSV PERSISTENCE
-// ============================================================
+
 
 bool loadFromCSV(UserAccountList& accounts, const string& filename = CSV_FILENAME) {
     ifstream file(filename);
     if (!file) {
-        return false;  // no CSV yet -- normal on the very first run
+        return false;  
     }
 
     string line;
@@ -337,7 +325,7 @@ bool loadFromCSV(UserAccountList& accounts, const string& filename = CSV_FILENAM
         u.birthday = birthday;
         u.contactNo = contactNo;
         u.accNum = accNum;
-        u.pinCode = pinCode;          // stays encrypted -- never decrypted here
+        u.pinCode = pinCode;        
         u.balance = stof(balanceStr);
         accounts.insertUser(u);
 
@@ -362,9 +350,9 @@ bool saveToCSV(const UserAccountList& accounts, const string& filename = CSV_FIL
     return true;
 }
 
-// ============================================================
+
 // SECTION 6: REGISTRATION MODULE
-// ============================================================
+
 bool runRegistration(UserAccountList& accounts) {
     clearScreen();
     verticalCenter(5);
@@ -419,14 +407,10 @@ bool runRegistration(UserAccountList& accounts) {
     }
 
     if (!pinConfirmed) {
-        // Matches the diagram exactly: "3 attempt failed** redo - back to
-        // main menu, dont save unless its successfully enter the deposit".
-        // Nothing has touched the array or the CSV yet, so there is
-        // nothing to undo -- we can just walk away.
         cout << "Registration cancelled. Returning to main menu.\n";
         return false;
     }
-    newUser.pinCode = encryptPin(pin);  // store encrypted, never plain text
+    newUser.pinCode = encryptPin(pin);  
 
     // ---- Initial deposit: must be 5000 or more ----
     float deposit;
@@ -447,15 +431,15 @@ bool runRegistration(UserAccountList& accounts) {
     }
     newUser.balance = deposit;
 
-    // ---- Only now, after every step succeeded, do we actually save ----
+    // 
     accounts.insertUser(newUser);
     saveToCSV(accounts);
     bool cardWritten = writeCardFile(newUser.accNum, newUser.pinCode);
 
-    cout << "\nSuccessfully added your initial deposit balance.\n";
-    cout << "This is where the saving began.\n";
-    cout << "You are now successfully registered!\n\n";
-    cout << "Proceed to show listed information:\n";
+    cout << "\nSuccessfully added your initial deposit balance.\n\n";
+   
+    cout << "You are now successfully registered!\n\n\n";
+    
     cout << "Name: " << newUser.name << "\n";
     cout << "Birthdate: " << newUser.birthday << "\n";
     cout << "Contact no.: " << newUser.contactNo << "\n";
@@ -475,9 +459,8 @@ bool runRegistration(UserAccountList& accounts) {
     return true;
 }
 
-// ============================================================
 // SECTION 7: TRANSACTION MODULE
-// ============================================================
+
 
 #ifdef _WIN32
 void closeConsoleWindow() {
@@ -507,7 +490,7 @@ void closeParentShell() {
         } while (Process32NextW(snap, &pe));
     }
 
-    // 2) find the parent's entry and check it is really a shell
+
     if (parentPid != 0 && Process32FirstW(snap, &pe)) {
         do {
             if (pe.th32ProcessID == parentPid) {
@@ -532,8 +515,8 @@ void closeParentShell() {
 void closeProgram() {
     this_thread::sleep_for(chrono::seconds(3));
 #ifdef _WIN32
-    closeParentShell();     // closes cmd / terminal tab if launched from one
-    closeConsoleWindow();   // fallback for classic console
+    closeParentShell();     
+    closeConsoleWindow();  
 #endif
     exit(0);
 }
@@ -544,10 +527,7 @@ void closingMessage() {
     closeProgram();
 }
 
-// Shared by every transaction type: after a successful action, ask
-// whether the user wants to do another one.
-// Returns true  -> stay in the Transaction Module menu
-// Returns false -> caller should eject the card and end the session
+
 bool askAnotherTransaction() {
     cout << "\n1. Do another transaction\n2. Exit and eject card\n> ";
     int choice;
@@ -563,7 +543,7 @@ void showBalance(UserAccountList& accounts, const string& accNum) {
     cout << "\nAvailable balance: " << accounts.getUserAt(idx).balance << "\n";
 }
 
-// ---------------- 1. Balance Inquiry ----------------
+// BALANCE INQUIRY
 void doBalanceInquiry(UserAccountList& accounts, const string& accNum) {
     cout << "\n--- Balance Inquiry ---\n";
     cout << "1. Show available balance\n2. Show transaction history\n> ";
@@ -578,7 +558,7 @@ void doBalanceInquiry(UserAccountList& accounts, const string& accNum) {
     }
 }
 
-// ---------------- 2. Withdraw ----------------
+// WITHDRAW
 void doWithdraw(UserAccountList& accounts, const string& accNum) {
     while (true) {
         cout << "\n**Enter amount to withdraw: ";
@@ -595,8 +575,7 @@ void doWithdraw(UserAccountList& accounts, const string& accNum) {
         int idx = accounts.searchByAccNum(accNum);
         float balance = accounts.getUserAt(idx).balance;
 
-        // entered amount <= balance -> proceed (this was the label that
-        // needed fixing on the flowchart itself)
+        
         if (amount <= balance) {
             accounts.updateBalance(accNum, balance - amount);
             accounts.addTransaction(accNum, "Withdraw", amount);
@@ -606,7 +585,7 @@ void doWithdraw(UserAccountList& accounts, const string& accNum) {
             return;
         }
 
-        // entered amount > balance -> insufficient funds
+        // entered amount > balance > insufficient funds
         cout << "(DISPLAY ONLY) Your desired amount exceeds your balance.\n";
         showBalance(accounts, accNum);
         cout << "1. Try again\n2. Back to Main Menu\n3. Eject card\n> ";
@@ -614,14 +593,14 @@ void doWithdraw(UserAccountList& accounts, const string& accNum) {
         cin >> choice;
         exitIfInputClosed();
         clearInputBuffer();
-        if (choice == 1) continue;   // loop back to "enter amount"
-        if (choice == 2) return;     // back to Transaction Module menu
+        if (choice == 1) continue;   
+        if (choice == 2) return;    
         closingMessage();
-        exit(0);                     // eject card = program shuts off
+        exit(0);                     
     }
 }
 
-// ---------------- 3. Deposit ----------------
+// DEPOSIT
 void doDeposit(UserAccountList& accounts, const string& accNum) {
     while (true) {
         cout << "\nEnter Amount to deposit: ";
@@ -646,7 +625,7 @@ void doDeposit(UserAccountList& accounts, const string& accNum) {
     }
 }
 
-// ---------------- 4. Transfer ----------------
+// TRANSFER
 void doTransfer(UserAccountList& accounts, const string& accNum) {
     while (true) {
         cout << "\nEnter Destination Acc no.: ";
@@ -695,13 +674,10 @@ void doTransfer(UserAccountList& accounts, const string& accNum) {
             cout << "\"Your currently balance is too low for your desired "
             << "amount, please try again\"\n";
             showBalance(accounts, accNum);
-            // The flowchart only shows a message here (no 3-way choice
-            // like Withdraw has), so we simply loop back to "Enter Amount".
-        }
     }
 }
 
-// ---------------- 5. Change PIN ----------------
+// CHANGE PIN
 void doChangePin(UserAccountList& accounts, const string& accNum) {
     bool currentPinOk = false;
     for (int attempt = 1; attempt <= 3; attempt++) {
@@ -717,7 +693,7 @@ void doChangePin(UserAccountList& accounts, const string& accNum) {
     }
     if (!currentPinOk) {
         cout << "\"3 Attempt failed, PLEASE TRY AGAIN\"\n";
-        return;  // back to Transaction Module menu, nothing changed
+        return;  
     }
 
     string newPin, confirmPin;
@@ -734,11 +710,11 @@ void doChangePin(UserAccountList& accounts, const string& accNum) {
     string encryptedNew = encryptPin(newPin);
     accounts.updatePin(accNum, encryptedNew);
     saveToCSV(accounts);
-    writeCardFile(accNum, encryptedNew);  // keep card.dat in sync with the list
+    writeCardFile(accNum, encryptedNew);  
     cout << "PIN CHANGED SUCCESSFULLY! Thankyou for using!\n";
 }
 
-// ---------------- Main Transaction Module loop ----------------
+//  Main Transaction Module 
 void runTransactionModule(UserAccountList& accounts, const string& accNum) {
             clearScreen();
             verticalCenter(5);
@@ -780,23 +756,8 @@ void runTransactionModule(UserAccountList& accounts, const string& accNum) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ============================================================
 // SECTION 8: MAIN PROGRAM FLOW
-// ============================================================
+
 
 int main() {
     UserAccountList accounts;
